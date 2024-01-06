@@ -1,0 +1,20 @@
+#!/bin/sh
+
+if test -z "$MESON"; then
+    if command -v muon >/dev/null 2>&1; then
+        MESON=muon
+    else
+        MESON=meson
+    fi
+fi
+
+# muon doesn't support --version (but you have to use either `muon version` or `muon meson --version`)
+$MESON --version >/dev/null 2>&1 && is_meson=1 || is_meson=0
+
+if test $is_meson -eq 1; then
+    # Using Meson
+    $MESON install | grep -v '^:ninja:' | sed -e "s/^Installing\s\+\(.\+\)\s\+to\s\+\(.\+\)\$/install -D '\1' '\2';/g"
+else
+    # Using muon
+    $MESON install 2>&1 | sed -e 's/\s\+\->\s\+/ /g'
+fi
